@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Videos from './pages/Videos';
+import Store from './pages/Store';
 import Contact from './pages/Contact';
 import EventUpdates from './pages/EventUpdates';
 import './styles/globals.css';
@@ -11,6 +12,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/videos" element={<Videos />} />
+        <Route path="/store" element={<Store />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/eventupdates" element={<EventUpdates />} />
       </Routes>
