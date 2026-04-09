@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import abandonedCartService, { clearCartSession } from '../services/abandonedCart';
 
 const CartContext = createContext();
 
@@ -37,6 +38,19 @@ export const CartProvider = ({ children }) => {
     }
   }, [user]);
 
+  // Sync cart with WordPress for abandoned cart tracking
+  useEffect(() => {
+    // Only sync if cart has items
+    if (cartItems.length > 0) {
+      // Debounce the sync to avoid too many API calls
+      const timeoutId = setTimeout(() => {
+        abandonedCartService.syncCartWithWordPress(cartItems, user);
+      }, 2000); // Wait 2 seconds after last change
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [cartItems, user]);
+
   const addToCart = (product, quantity = 1) => {
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === product.id);
@@ -61,6 +75,8 @@ export const CartProvider = ({ children }) => {
 
   const updateQuantity = (productId, quantity) => {
     if (quantity <= 0) {
+    // Clear the session when cart is cleared
+    clearCartSession();
       removeFromCart(productId);
       return;
     }
