@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { wooCommerceService } from '../services/wordpressApi';
+import { useCart } from '../context/CartContext';
 
 export default function Store() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const { addToCart } = useCart();
+  const [addedToCart, setAddedToCart] = useState({});
 
   useEffect(() => {
     fetchProducts();
@@ -52,6 +55,16 @@ export default function Store() {
       style: 'currency',
       currency: 'ZAR'
     }).format(price);
+  };
+
+  const handleAddToCart = (product) => {
+    addToCart(product, 1);
+    setAddedToCart(prev => ({ ...prev, [product.id]: true }));
+    
+    // Reset the "added" state after 2 seconds
+    setTimeout(() => {
+      setAddedToCart(prev => ({ ...prev, [product.id]: false }));
+    }, 2000);
   };
 
   return (
@@ -172,15 +185,27 @@ export default function Store() {
                          'On Backorder'}
                       </div>
 
-                      {/* View Product Button */}
-                      <a 
-                        href={product.permalink} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="view-product-btn"
-                      >
-                        View Product
-                      </a>
+                      {/* Action Buttons */}
+                      <div className="product-actions">
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className={`btn-add-to-cart ${addedToCart[product.id] ? 'added' : ''}`}
+                          disabled={product.stock_status === 'outofstock'}
+                        >
+                          {addedToCart[product.id] ? '✓ Added!' : 
+                           product.stock_status === 'outofstock' ? 'Out of Stock' : 
+                           '🛒 Add to Cart'}
+                        </button>
+                        
+                        <a 
+                          href={product.permalink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="view-product-link"
+                        >
+                          View Details
+                        </a>
+                      </div>
                     </div>
                   </div>
                 ))}
