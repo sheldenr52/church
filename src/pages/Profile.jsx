@@ -50,7 +50,6 @@ export default function Profile() {
             country: formData.country,
           };
           updateUser(updatedUser);
-      navigate('/');
           setSuccess('Profile updated successfully!');
           setIsEditing(false);
         })
@@ -60,9 +59,9 @@ export default function Profile() {
         })
         .finally(() => {
           setLoading(false);
-        });Please login or register to view your profile</p>
-            <button onClick={() => navigate('/login')} className="btn-create-profile">
-              Login / Register if not a WordPress user
+        });
+    } else {
+      // Just update locally if not a WordPress user
       updateUser(formData);
       setIsEditing(false);
       setLoading(false);
@@ -87,20 +86,9 @@ export default function Profile() {
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
       logout();
+      navigate('/');
     }
-  };error && (
-            <div className="alert alert-error" style={{ marginBottom: '2rem' }}>
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="alert alert-success" style={{ marginBottom: '2rem' }}>
-              {success}
-            </div>
-          )}
-
-          {
+  };
 
   if (!user && !isEditing) {
     return (
@@ -109,9 +97,9 @@ export default function Profile() {
           <div className="profile-empty">
             <div className="profile-empty-icon">👤</div>
             <h2>No Profile Found</h2>
-            <p>Create your profile to manage your orders and preferences</p>
-            <button onClick={() => setIsEditing(true)} className="btn-create-profile">
-              Create Profile
+            <p>Please login or register to view your profile</p>
+            <button onClick={() => navigate('/login')} className="btn-create-profile">
+              Login / Register
             </button>
           </div>
         </div>
@@ -137,6 +125,18 @@ export default function Profile() {
         </div>
 
         <div className="profile-content">
+          {error && (
+            <div className="alert alert-error" style={{ marginBottom: '2rem' }}>
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="alert alert-success" style={{ marginBottom: '2rem' }}>
+              {success}
+            </div>
+          )}
+
           {isEditing ? (
             <form onSubmit={handleSubmit} className="profile-form">
               <h2>{user ? 'Edit Profile' : 'Create Profile'}</h2>
@@ -224,11 +224,11 @@ export default function Profile() {
                   />
                 </div>
               </div>
- disabled={loading}>
-                  {loading ? 'Saving...' : 'Save Profile'}
-                </button>
-                {user && (
-                  <button type="button" onClick={handleCancel} className="btn-cancel" disabled={loading}
+
+              <div className="form-group">
+                <label htmlFor="country">Country</label>
+                <input
+                  type="text"
                   id="country"
                   name="country"
                   value={formData.country}
@@ -237,6 +237,18 @@ export default function Profile() {
               </div>
 
               <div className="form-actions">
+                <button type="submit" className="btn-save" disabled={loading}>
+                  {loading ? 'Saving...' : 'Save Profile'}
+                </button>
+                {user && (
+                  <button type="button" onClick={handleCancel} className="btn-cancel" disabled={loading}>
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
+          ) : (
+            <div className="profile-display">
               {user?.id && (
                 <div className="profile-section">
                   <h2>Account Information</h2>
@@ -255,18 +267,6 @@ export default function Profile() {
                 </div>
               )}
               
-                <button type="submit" className="btn-save">
-                  Save Profile
-                </button>
-                {user && (
-                  <button type="button" onClick={handleCancel} className="btn-cancel">
-                    Cancel
-                  </button>
-                )}
-              </div>
-            </form>
-          ) : (
-            <div className="profile-display">
               <div className="profile-section">
                 <h2>Personal Information</h2>
                 <div className="profile-info">
