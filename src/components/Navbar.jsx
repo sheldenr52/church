@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { getCartCount } = useCart();
+  const { getCartCount, user } = useCart();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -44,9 +44,15 @@ export default function Navbar() {
               <span className="cart-badge">{getCartCount()}</span>
             )}
           </Link>
-          <Link to="/profile" onClick={closeMenu} className="nav-profile">
-            👤
-          </Link>
+          {user ? (
+            <Link to="/profile" onClick={closeMenu} className="nav-profile" title={user.firstName}>
+              👤
+            </Link>
+          ) : (
+            <Link to="/login" onClick={closeMenu} className="nav-login">
+              Login
+            </Link>
+          )}
         </div>
       </div>
     </nav>

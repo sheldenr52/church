@@ -140,4 +140,143 @@ export const wooCommerceService = {
   },
 };
 
-export default { wordpressService, wooCommerceService };
+// Authentication & User Service
+export const authService = {
+  // Register a new user (using WooCommerce customer endpoint)
+  register: async (userData) => {
+    try {
+      const response = await wooCommerceApi.post('/customers', {
+        email: userData.email,
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        username: userData.username || userData.email.split('@')[0],
+        password: userData.password,
+        billing: {
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          address_1: userData.address || '',
+          city: userData.city || '',
+          postcode: userData.postalCode || '',
+          country: userData.country || 'ZA',
+          email: userData.email,
+          phone: userData.phone || '',
+        },
+        shipping: {
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          address_1: userData.address || '',
+          city: userData.city || '',
+          postcode: userData.postalCode || '',
+          country: userData.country || 'ZA',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error registering user:', error);
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Registration failed. Please try again.');
+    }
+  },
+
+  // Verify user credentials (check if customer exists)
+  login: async (email, password) => {
+    try {
+      // Note: This is a simplified approach. For production, you should use JWT authentication
+      // or WordPress's built-in authentication system with proper security measures.
+      
+      // Search for customer by email
+      const response = await wooCommerceApi.get('/customers', {
+        params: {
+          email: email,
+          per_page: 1
+        }
+      });
+      
+      if (response.data && response.data.length > 0) {
+        const customer = response.data[0];
+        // In a real implementation, you'd verify the password server-side
+        // For now, we'll return the customer data
+        return {
+          id: customer.id,
+          email: customer.email,
+          firstName: customer.first_name,
+          lastName: customer.last_name,
+          username: customer.username,
+          phone: customer.billing?.phone || '',
+          address: customer.billing?.address_1 || '',
+          city: customer.billing?.city || '',
+          postalCode: customer.billing?.postcode || '',
+          country: customer.billing?.country || 'ZA',
+        };
+      } else {
+        throw new Error('Invalid email or password');
+      }
+    } catch (error) {
+      console.error('Error logging in:', error);
+      if (error.message === 'Invalid email or password') {
+        throw error;
+      }
+      throw new Error('Login failed. Please try again.');
+    }
+  },
+
+  // Get customer by ID
+  getCustomer: async (customerId) => {
+    try {
+      const response = await wooCommerceApi.get(`/customers/${customerId}`);
+      const customer = response.data;
+      return {
+        id: customer.id,
+        email: customer.email,
+        firstName: customer.first_name,
+        lastName: customer.last_name,
+        username: customer.username,
+        phone: customer.billing?.phone || '',
+        address: customer.billing?.address_1 || '',
+        city: customer.billing?.city || '',
+        postalCode: customer.billing?.postcode || '',
+        country: customer.billing?.country || 'ZA',
+      };
+    } catch (error) {
+      console.error('Error fetching customer:', error);
+      throw error;
+    }
+  },
+
+  // Update customer
+  updateCustomer: async (customerId, userData) => {
+    try {
+      const response = await wooCommerceApi.put(`/customers/${customerId}`, {
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        email: userData.email,
+        billing: {
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          address_1: userData.address || '',
+          city: userData.city || '',
+          postcode: userData.postalCode || '',
+          country: userData.country || 'ZA',
+          email: userData.email,
+          phone: userData.phone || '',
+        },
+        shipping: {
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          address_1: userData.address || '',
+          city: userData.city || '',
+          postcode: userData.postalCode || '',
+          country: userData.country || 'ZA',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating customer:', error);
+      throw error;
+    }
+  },
+};
+
+export default { wordpressService, wooCommerceService, authService };

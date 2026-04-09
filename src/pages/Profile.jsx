@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useCart } from '../context/CartContext';
+import { authService } from '../services/wordpressApi';
 
 export default function Profile() {
+  const navigate = useNavigate();
   const { user, updateUser, logout } = useCart();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -23,8 +29,45 @@ export default function Profile() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    updateUser(formData);
-    setIsEditing(false);
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    // If user has WordPress ID, update in WordPress
+    if (user?.id) {
+      authService.updateCustomer(user.id, formData)
+        .then((updatedCustomer) => {
+          const updatedUser = {
+            id: updatedCustomer.id,
+            email: updatedCustomer.email,
+            firstName: updatedCustomer.first_name,
+            lastName: updatedCustomer.last_name,
+            username: updatedCustomer.username,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            postalCode: formData.postalCode,
+            country: formData.country,
+          };
+          updateUser(updatedUser);
+      navigate('/');
+          setSuccess('Profile updated successfully!');
+          setIsEditing(false);
+        })
+        .catch((err) => {
+          setError('Failed to update profile. Please try again.');
+          console.error('Update error:', err);
+        })
+        .finally(() => {
+          setLoading(false);
+        });Please login or register to view your profile</p>
+            <button onClick={() => navigate('/login')} className="btn-create-profile">
+              Login / Register if not a WordPress user
+      updateUser(formData);
+      setIsEditing(false);
+      setLoading(false);
+      setSuccess('Profile updated locally!');
+    }
   };
 
   const handleCancel = () => {
@@ -45,7 +88,19 @@ export default function Profile() {
     if (window.confirm('Are you sure you want to logout?')) {
       logout();
     }
-  };
+  };error && (
+            <div className="alert alert-error" style={{ marginBottom: '2rem' }}>
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="alert alert-success" style={{ marginBottom: '2rem' }}>
+              {success}
+            </div>
+          )}
+
+          {
 
   if (!user && !isEditing) {
     return (
@@ -169,11 +224,11 @@ export default function Profile() {
                   />
                 </div>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="country">Country</label>
-                <input
-                  type="text"
+ disabled={loading}>
+                  {loading ? 'Saving...' : 'Save Profile'}
+                </button>
+                {user && (
+                  <button type="button" onClick={handleCancel} className="btn-cancel" disabled={loading}
                   id="country"
                   name="country"
                   value={formData.country}
@@ -182,6 +237,24 @@ export default function Profile() {
               </div>
 
               <div className="form-actions">
+              {user?.id && (
+                <div className="profile-section">
+                  <h2>Account Information</h2>
+                  <div className="profile-info">
+                    <div className="info-row">
+                      <span className="info-label">WordPress ID:</span>
+                      <span className="info-value">{user.id}</span>
+                    </div>
+                    {user.username && (
+                      <div className="info-row">
+                        <span className="info-label">Username:</span>
+                        <span className="info-value">{user.username}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
                 <button type="submit" className="btn-save">
                   Save Profile
                 </button>
